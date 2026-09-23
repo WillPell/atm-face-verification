@@ -1,0 +1,14 @@
+name: facial-recognition
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy
+  - matplotlib
+  - h5py
+  - scikit-learn
+  - notebook
+  - ipykernel
+  - pip
+  - pip:
+      - opencv-python
