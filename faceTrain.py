@@ -8,18 +8,19 @@ from sklearn.linear_model import LogisticRegression
 
 imposter_path = "faces_imposter/*png"
 client_path = "faces_client/*png"
-client_images = [cv2.imread(file) for file in glob.glob(client_path)]
-imposter_images = [cv2.imread(file) for file in glob.glob(imposter_path)]
+client_images = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in glob.glob(client_path)]
+imposter_images = [cv2.imread(f, cv2.IMREAD_GRAYSCALE) for f in glob.glob(imposter_path)]
 print(f"Loaded {len(client_images)} client images.")
 print(f"Loaded {len(imposter_images)} imposter images.")
 
 
-labels_imposter = np.zeros(imposter_images.shape[0], dtype=np.int32)
-labels_client = np.ones(client_images.shape[0], dtype=np.int32)
+labels_imposter = np.zeros(len(imposter_images), dtype=np.int32)
+labels_client = np.ones(len(client_images), dtype=np.int32)
 
-X1_train, X1_test, y1_train, y1_test = train_test_split(imposter_images, labels_imposter, test_size=0.2, random_state=42)
-X2_train, X2_test, y2_train, y2_test = train_test_split(client_images, labels_client, test_size=0.2, random_state=42)
 
+
+X1_train, X1_test, y1_train, y1_test = train_test_split(imposter_images, labels_imposter, test_size=5, random_state=42)
+X2_train, X2_test, y2_train, y2_test = train_test_split(client_images, labels_client, test_size=5, random_state=42)
 X_train = np.concatenate((X1_train, X2_train), axis=0)
 X_test = np.concatenate((X1_test, X2_test), axis=0)
 
@@ -45,3 +46,13 @@ pred = lr.predict(X_test_flat)
 prob = lr.predict_proba(X_test_flat)
 accuracy = lr.score(X_test_flat, y_test)
 print(f"Accuracy: {accuracy}")
+from sklearn.metrics import confusion_matrix
+
+for name, model in [("LDA", lda), ("LR", lr)]:
+    print(name, "train acc:", model.score(X_train_flat, y_train))
+    print(name, "test acc: ", model.score(X_test_flat, y_test))
+    print(confusion_matrix(y_test, model.predict(X_test_flat)))
+    print(np.round(model.predict_proba(X_test_flat)[:, 1], 3))
+
+
+
