@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import joblib
-
+from skimage.feature import hog
 # final image size parameters
 cheight = 100
 cwidth = 100
@@ -31,9 +31,8 @@ xcrop2 = 440
 ycrop2 = 350
 
 count = 0
-
-
-
+svm = joblib.load("svm.joblib")
+image_array = []
 
 while True:
     # Capture frame-by-frame
@@ -60,20 +59,16 @@ while True:
 
 	# wait for key press
     key = cv2.waitKey(1)
-
-	# save the image to file if user presses 's'
-    if key == ord('s'):
-        # crop to create square image
+    if key == ord('c'):
         cgrey = grey[ycrop1:ycrop2, xcrop1:xcrop2]
-
         resGrey = cv2.resize(cgrey, (cwidth, cheight))
-        filename = "faces_client/" + filenamePrefix + str(count) + ".png"
-        cv2.imwrite(filename, resGrey)
+        sample = hog(resGrey, orientations=9, pixels_per_cell=(8, 8),
+                    cells_per_block=(2, 2), block_norm="L2-Hys").reshape(1, -1)
+        image_array.append(sample)
 
-        print("Face captured as ", filename)
-        count += 1
-
-    # quit program if users presses 'q'
+        svm_prob = svm.predict_proba(sample)[0, 1]
+        print(f"SVM client probability: {svm_prob:.3f}")
+        print("SVM Accepted" if svm_prob > 0.65 else "SVM Denied")
     if key == ord('q'):
         break
 

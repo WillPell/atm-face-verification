@@ -31,9 +31,9 @@ xcrop2 = 440
 ycrop2 = 350
 
 count = 0
-
-
-
+lda = joblib.load("lda.joblib")
+lr = joblib.load("lr.joblib")
+image_array = []
 
 while True:
     # Capture frame-by-frame
@@ -61,17 +61,22 @@ while True:
 	# wait for key press
     key = cv2.waitKey(1)
 
-	# save the image to file if user presses 's'
-    if key == ord('s'):
+    if key == ord('c'):
         # crop to create square image
         cgrey = grey[ycrop1:ycrop2, xcrop1:xcrop2]
 
         resGrey = cv2.resize(cgrey, (cwidth, cheight))
-        filename = "faces_client/" + filenamePrefix + str(count) + ".png"
-        cv2.imwrite(filename, resGrey)
+        sample = resGrey.flatten().reshape(1, -1)
+        image_array.append(sample)
+        lda_prob = lda.predict_proba(sample)[0, 1]   # probability of "client"
+        print(f"LDA client probability: {lda_prob:.3f}")
+        print("LDA Accepted" if lda_prob > 0.65 else "LDA Denied")
 
-        print("Face captured as ", filename)
-        count += 1
+        lr_prob = lr.predict_proba(sample)[0, 1]
+        print(f"LR client probability: {lr_prob:.3f}")
+        print("LR Accepted" if lr_prob > 0.65 else "LR Denied")
+        lda_predictions = lda.predict(sample)
+
 
     # quit program if users presses 'q'
     if key == ord('q'):
