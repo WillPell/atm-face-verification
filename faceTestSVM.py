@@ -66,9 +66,9 @@ while True:
                     cells_per_block=(2, 2), block_norm="L2-Hys").reshape(1, -1)
         image_array.append(sample)
 
-        svm_prob = svm.predict_proba(sample)[0, 1]
-        print(f"SVM client probability: {svm_prob:.3f}")
-        print("SVM Accepted" if svm_prob > 0.65 else "SVM Denied")
+        score = svm.decision_function(sample)[0]
+        print(f"SVM score: {score:+.3f}")
+        print("SVM Accepted" if score > 0.3 else "SVM Denied")
     if key == ord('q'):
         break
 

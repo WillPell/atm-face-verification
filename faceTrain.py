@@ -32,19 +32,37 @@ X_test_flat = X_test.reshape(X_test.shape[0], -1)
 
 lda = LinearDiscriminantAnalysis()
 lda.fit(X_train_flat, y_train)
-joblib.dump(lda, "lda.joblib")
+
 
 pred = lda.predict(X_test_flat)
 prob = lda.predict_proba(X_test_flat)
 accuracy = lda.score(X_test_flat, y_test)
 print(f"Accuracy: {accuracy}")
 
-lr = LogisticRegression(C=1.0, solver='lbfgs', max_iter=1000)
+
+#Find best C values
+c_vals= np.logspace(-8,2, 11)
+train_accuracy = []
+val_accuracy = []
+
+for c in c_vals:
+    model = LogisticRegression(C=c, solver='lbfgs', max_iter=1000)
+    model.fit(X_train_flat, y_train)
+    train_accuracy.append(model.score(X_train_flat, y_train))
+    val_accuracy.append(model.score(X_test_flat, y_test))
+
+i = int(np.argmax(val_accuracy))
+c = c_vals[i]
+print(f"Best C value is {c} (lambda = {1/c:g}), val acc = {val_accuracy[i]:.3f}")
+lr = LogisticRegression(C=c, solver="lbfgs", max_iter=1000)
 lr.fit(X_train_flat, y_train)
-joblib.dump(lr, "lr.joblib")
+
 pred = lr.predict(X_test_flat)
 prob = lr.predict_proba(X_test_flat)
 accuracy = lr.score(X_test_flat, y_test)
+
+joblib.dump({"lda": lda, "lr": lr}, "faceModel.model")
+
 print(f"Accuracy: {accuracy}")
 from sklearn.metrics import confusion_matrix
 

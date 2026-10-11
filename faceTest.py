@@ -30,9 +30,10 @@ xcrop1 = 220
 xcrop2 = 440
 ycrop2 = 350
 
-count = 0
-lda = joblib.load("lda.joblib")
-lr = joblib.load("lr.joblib")
+count = 0 
+models = joblib.load("faceModel.model")
+lda = models["lda"]
+lr = models["lr"]
 image_array = []
 
 while True:
