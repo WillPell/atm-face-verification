@@ -13,7 +13,7 @@ height = 480
 
 filenamePrefix = "student"  # this is the prefix for the image filenames
 
-print("Press 's' to save, 'q' to quit")
+print("Press 'c' to classify, 'q' to quit")
 
 cap = cv2.VideoCapture(0)
 cap.set(3, width)  # set the width
