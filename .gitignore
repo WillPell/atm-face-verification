@@ -22,7 +22,7 @@ faces_imposter/
 
 faces_client/
 
-offline_eval
+offline_eval.py
 
 ml_lab2template.ipynb
 
