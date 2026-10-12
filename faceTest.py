@@ -35,7 +35,7 @@ models = joblib.load("faceModel.model")
 lda = models["lda"]
 lr = models["lr"]
 image_array = []
-
+svm = joblib.load("svm.joblib")
 while True:
     # Capture frame-by-frame
     (ret, frame) = cap.read()
@@ -77,7 +77,6 @@ while True:
         print(f"LR client probability: {lr_prob:.3f}")
         print("LR Accepted" if lr_prob > 0.65 else "LR Denied")
         lda_predictions = lda.predict(sample)
-
 
     # quit program if users presses 'q'
     if key == ord('q'):

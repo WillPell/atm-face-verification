@@ -5,6 +5,20 @@ import glob
 import numpy as np
 import joblib
 from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
+THRESHOLD = 0.65
+
+
+def show_grid(images, title, cols=10):
+    rows = int(np.ceil(len(images) / cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(1.6 * cols, 1.8 * rows), squeeze=False)
+    for ax in axes.ravel():
+        ax.axis("off")
+    for ax, im in zip(axes.ravel(), images):
+        ax.imshow(im, cmap="gray", vmin=0, vmax=255)
+    fig.suptitle(title)
+    fig.tight_layout()
+
 
 imposter_path = "faces_imposter/*png"
 client_path = "faces_client/*png"
@@ -24,6 +38,13 @@ X2_train, X2_test, y2_train, y2_test = train_test_split(client_images, labels_cl
 X_train = np.concatenate((X1_train, X2_train), axis=0)
 X_test = np.concatenate((X1_test, X2_test), axis=0)
 
+show_grid(X2_train, f"Client: training ({len(X2_train)} images)")
+show_grid(X2_test, f"Client: validation ({len(X2_test)} images)", cols=5)
+show_grid(X1_train, f"Imposter: training ({len(X1_train)} images)")
+show_grid(X1_test, f"Imposter: validation ({len(X1_test)} images)", cols=5)
+plt.show()
+
+
 y_train = np.concatenate((y1_train, y2_train), axis=0)
 y_test = np.concatenate((y1_test, y2_test), axis=0)
 
@@ -37,7 +58,7 @@ lda.fit(X_train_flat, y_train)
 pred = lda.predict(X_test_flat)
 prob = lda.predict_proba(X_test_flat)
 accuracy = lda.score(X_test_flat, y_test)
-print(f"Accuracy: {accuracy}")
+print(f"LDA Accuracy: {accuracy}")
 
 
 #Find best C values
@@ -63,7 +84,7 @@ accuracy = lr.score(X_test_flat, y_test)
 
 joblib.dump({"lda": lda, "lr": lr}, "faceModel.model")
 
-print(f"Accuracy: {accuracy}")
+print(f"LR Accuracy: {accuracy}")
 from sklearn.metrics import confusion_matrix
 
 for name, model in [("LDA", lda), ("LR", lr)]:
@@ -71,6 +92,19 @@ for name, model in [("LDA", lda), ("LR", lr)]:
     print(name, "test acc: ", model.score(X_test_flat, y_test))
     print(confusion_matrix(y_test, model.predict(X_test_flat)))
     print(np.round(model.predict_proba(X_test_flat)[:, 1], 3))
+
+
+def far_frr(y, p_client, t):
+    pred = (p_client > t).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y, pred, labels=[0, 1]).ravel()
+    return fp / max(fp + tn, 1), fn / max(fn + tp, 1)
+
+
+for name, model in [("LDA", lda), ("LR", lr)]:
+    for split, X, y in [("train", X_train_flat, y_train),
+                        ("validation", X_test_flat, y_test)]:
+        far, frr = far_frr(y, model.predict_proba(X)[:, 1], THRESHOLD)
+        print(f"{name} {split:10s} threshold={THRESHOLD}: FAR={far:.2f}  FRR={frr:.2f}")
 
 
 
